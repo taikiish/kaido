@@ -1,0 +1,69 @@
+/* Kaido site: app-matched theme. Paper ground, white grouped cards, hanko red header like the launch screen. */
+:root {
+  --hanko: #c1272d;
+  --hanko-ink: #f3efe9;
+  --paper: #f7f6f3;
+  --card: #ffffff;
+  --fg: #111111;
+  --muted: #6e6b66;
+  --rule: #e7e4df;
+  --rounded: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Hiragino Maru Gothic ProN", "Segoe UI", system-ui, sans-serif;
+  --text: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --paper: #0a0a0a; --card: #171717; --fg: #f5f5f5; --muted: #9b9893; --rule: #262626; color-scheme: dark; }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--paper); color: var(--fg); font: 400 17px/1.6 var(--text); }
+a { color: var(--hanko); text-underline-offset: 2px; }
+a:focus-visible { outline: 2px solid var(--hanko); outline-offset: 2px; border-radius: 4px; }
+
+.band { background: var(--hanko); color: var(--hanko-ink); }
+.band-inner {
+  max-width: 44rem; margin: 0 auto;
+  padding-block: calc(2.5rem + env(safe-area-inset-top, 0px)) 2.25rem;
+  padding-left: max(20px, env(safe-area-inset-left, 0px));
+  padding-right: max(20px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 1.25rem;
+}
+.brand { display: flex; align-items: center; gap: .85rem; color: inherit; text-decoration: none; }
+.brand img { width: 52px; height: 52px; border-radius: 12px; box-shadow: 0 0 0 1.5px rgba(243,239,233,.35); }
+.brand span { font: 800 1.35rem/1 var(--rounded); letter-spacing: .14em; }
+.band h1 { margin: 0; font: 700 clamp(2rem, 6vw, 2.75rem)/1.08 var(--rounded); letter-spacing: -.01em; text-wrap: balance; }
+.band p { margin: 0; max-width: 34rem; font-size: 1.05rem; opacity: .92; }
+.meta { font: 600 .78rem/1 var(--rounded); letter-spacing: .12em; text-transform: uppercase; opacity: .8; }
+
+main {
+  max-width: 44rem; margin: 0 auto;
+  padding-block: 2rem 3rem;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 1.25rem;
+}
+.label { margin: .75rem 0 -.6rem 1rem; color: var(--muted); font: 600 .78rem/1.2 var(--rounded); letter-spacing: .1em; text-transform: uppercase; }
+.card { background: var(--card); border-radius: 22px; padding: 1.25rem 1.35rem; }
+.card h2 { margin: 0 0 .45rem; font: 700 1.2rem/1.3 var(--rounded); text-wrap: balance; }
+.card p, .card ul { margin: 0 0 .7rem; }
+.card > :last-child { margin-bottom: 0; }
+.card ul { padding-left: 1.15rem; }
+.card li { margin-bottom: .4rem; }
+.card li::marker { color: var(--hanko); }
+.promise { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem; }
+.promise div { background: var(--card); border-radius: 18px; padding: 1rem 1.1rem; font: 600 .98rem/1.35 var(--rounded); }
+.promise b { display: block; color: var(--hanko); font-size: 1.5rem; line-height: 1; margin-bottom: .45rem; }
+.path { font: 600 .95em var(--rounded); }
+.mail { font: 700 1.05rem var(--rounded); }
+
+footer {
+  max-width: 44rem; margin: 0 auto;
+  padding-block: 0 calc(2.5rem + env(safe-area-inset-bottom, 0px));
+  padding-left: max(20px, env(safe-area-inset-left, 0px));
+  padding-right: max(20px, env(safe-area-inset-right, 0px));
+  color: var(--muted); font-size: .9rem; display: flex; flex-wrap: wrap; gap: .4rem 1.25rem;
+}
+footer a { color: var(--muted); }
+@media (max-width: 480px) {
+  .promise div { padding: .85rem .8rem; font-size: .86rem; border-radius: 16px; }
+}
