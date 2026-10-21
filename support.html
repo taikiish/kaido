@@ -4,48 +4,87 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#c1272d">
-<title>Kaido Support</title>
-<meta name="description" content="Help with Kaido, the app that logs every drive and maps every road you've driven.">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Space+Mono:wght@400;700&family=Public+Sans:wght@400;600;700&display=swap">
 <link rel="stylesheet" href="style.css">
+<title>Kaido Support</title>
+<meta name="description" content="Help with Kaido, the iPhone app that logs every drive and maps every road you've driven.">
 </head>
 <body>
+<a class="skip" href="#content">Skip to content</a>
 <header class="band">
-  <div class="band-inner">
-    <a class="brand" href="./"><img src="icon.png" alt="Kaido app icon"><span>KAIDO</span></a>
-    <h1>Support</h1>
-    <p>Questions, bugs or ideas? Email us and we'll get back to you, usually within a day.</p>
+  <div class="wrap">
+    <nav class="nav" aria-label="Site">
+      <a class="brand" href="./"><img src="icon.png" alt="" width="40" height="40"><span>KAIDO</span></a>
+      <ul>
+        <li><a href="privacy.html">Privacy</a></li>
+        <li><a href="support.html" aria-current="page">Support</a></li>
+      </ul>
+    </nav>
+    <div class="hero">
+      <p class="kicker">Help desk</p>
+      <h1>Support</h1>
+      <p class="lede">Questions, bugs or ideas? Email us and we'll get back to you, usually within a day.</p>
+      <div class="actions"><a class="btn btn-solid" href="mailto:taikishik@gmail.com">Email support</a></div>
+    </div>
   </div>
 </header>
 
-<main>
-  <section class="card">
-    <h2>Contact</h2>
-    <p><a class="mail" href="mailto:taikishik@gmail.com">taikishik@gmail.com</a></p>
-    <p>For a bug, tell us your iPhone model, the iOS version and what happened. A screenshot helps.</p>
-  </section>
+<div class="wrap">
+  <div class="page">
+    <aside class="toc" aria-label="On this page">
+      <ol>
+        <li><a href="#contact">Contact</a></li>
+        <li><a href="#faq">Common questions</a></li>
+      </ol>
+    </aside>
 
-  <p class="label">Common questions</p>
-  <section class="card">
-    <h2>A drive didn't record</h2>
-    <p>Set location access to <span class="path">Always</span> and turn on Motion &amp; Fitness for Kaido in iOS Settings. Kaido can't record after you swipe it away in the app switcher, so leave it open in the background.</p>
-  </section>
+    <main id="content" class="prose">
+      <section id="contact">
+        <p class="tag">Reach us</p>
+        <h2>Contact</h2>
+        <div class="contact"><a href="mailto:taikishik@gmail.com">taikishik@gmail.com</a></div>
+        <p>For a bug, tell us your iPhone model, the iOS version and what happened. A screenshot helps.</p>
+      </section>
 
-  <section class="card">
-    <h2>Does Kaido drain my battery?</h2>
-    <p>Kaido uses motion to wake up only when you start driving, then records GPS until you park. Most of the battery use happens during drives.</p>
-  </section>
-
-  <section class="card">
-    <h2>Who can see my drives?</h2>
-    <p>Only you. Routes stay on your iPhone and in your iCloud. Friends only see the totals you share. Read the <a href="privacy.html">privacy policy</a>.</p>
-  </section>
-</main>
+      <section id="faq">
+        <p class="tag">FAQ</p>
+        <h2>Common questions</h2>
+        <div>
+          <details open>
+            <summary>A drive didn't record</summary>
+            <p>Set location access to <span class="path">Always</span> and turn on Motion &amp; Fitness for Kaido in iOS Settings. Kaido can't record after you swipe it away in the app switcher, so leave it open in the background.</p>
+          </details>
+          <details>
+            <summary>Does Kaido drain my battery?</summary>
+            <p>Kaido uses motion to wake up only when you start driving, then records GPS until you park. Most of the battery use happens during drives.</p>
+          </details>
+          <details>
+            <summary>Who can see my drives?</summary>
+            <p>Only you. Routes stay on your iPhone and in your iCloud. Friends only see the totals you share. Read the <a href="privacy.html">privacy policy</a>.</p>
+          </details>
+          <details>
+            <summary>How do I delete my Friends profile?</summary>
+            <p>Open <span class="path">Profile › Delete my Friends profile</span>. It removes your name, photo, totals and invite code. Your drives stay on your phone.</p>
+          </details>
+          <details>
+            <summary>Can I try Kaido without driving?</summary>
+            <p>Yes. In Settings, tap <span class="path">Load the demo garage</span> or <span class="path">Load the Tokyo demo</span>.</p>
+          </details>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
 
 <footer>
-  <span>Kaido is made by Taiki Ishikawa.</span>
-  <a href="privacy.html">Privacy</a>
+  <div class="wrap">
+    <span>Kaido · made by Taiki Ishikawa</span>
+    <nav aria-label="Footer"><a href="privacy.html">Privacy</a><a href="support.html">Support</a></nav>
+  </div>
 </footer>
 </body>
 </html>

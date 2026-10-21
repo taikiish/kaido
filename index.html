@@ -4,29 +4,60 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#c1272d">
-<title>Kaido</title>
-<meta name="description" content="Kaido logs every drive and maps every road you've driven, car by car.">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Space+Mono:wght@400;700&family=Public+Sans:wght@400;600;700&display=swap">
 <link rel="stylesheet" href="style.css">
+<title>Kaido</title>
+<meta name="description" content="Kaido logs every drive and maps every road you've driven, car by car. Coming soon to iPhone.">
 </head>
 <body>
+<a class="skip" href="#content">Skip to content</a>
 <header class="band">
-  <div class="band-inner">
-    <a class="brand" href="./"><img src="icon.png" alt="Kaido app icon"><span>KAIDO</span></a>
-    <h1>Every road you've driven.</h1>
-    <p>Kaido logs your drives on its own and fills in a map of every road, county and country, car by car. Coming soon to iPhone.</p>
+  <div class="wrap">
+    <nav class="nav" aria-label="Site">
+      <a class="brand" href="./"><img src="icon.png" alt="" width="40" height="40"><span>KAIDO</span></a>
+      <ul>
+        <li><a href="privacy.html">Privacy</a></li>
+        <li><a href="support.html">Support</a></li>
+      </ul>
+    </nav>
+    <div class="hero">
+      <p class="kicker">For iPhone · Coming soon</p>
+      <h1>Every road you've driven</h1>
+      <p class="lede">Kaido logs your drives on its own and fills in a map of every road, county and country, car by car.</p>
+      <div class="actions">
+        <a class="btn btn-solid" href="support.html">Get in touch</a>
+        <a class="btn btn-ghost" href="privacy.html">How we treat your data</a>
+      </div>
+    </div>
   </div>
 </header>
-<main>
-  <section class="card">
-    <h2>Links</h2>
-    <ul>
-      <li><a href="privacy.html">Privacy policy</a></li>
-      <li><a href="support.html">Support</a></li>
-    </ul>
-  </section>
-</main>
-<footer><span>Kaido is made by Taiki Ishikawa.</span></footer>
+
+<div class="wrap">
+  <div class="odo" role="list" aria-label="What Kaido does">
+    <div role="listitem"><span class="wheels" aria-hidden="true"><b>A</b><b>U</b><b>T</b><b>O</b></span><span>Records every drive on its own</span></div>
+    <div role="listitem"><span class="wheels" aria-hidden="true"><b>M</b><b>A</b><b>P</b></span><span>Lights up each road, county and country</span></div>
+    <div role="listitem"><span class="wheels" aria-hidden="true"><b>C</b><b>A</b><b>R</b></span><span>Keeps a separate color for every car</span></div>
+  </div>
+  <main id="content" class="page single">
+    <div class="prose">
+      <section>
+        <p class="tag">Private by design</p>
+        <h2>Your roads stay yours</h2>
+        <p>Your routes stay on your iPhone and in your own iCloud. No ads, no trackers, and nothing is ever shared with insurers. <a href="privacy.html">Read the privacy policy</a>.</p>
+      </section>
+    </div>
+  </main>
+</div>
+
+<footer>
+  <div class="wrap">
+    <span>Kaido · made by Taiki Ishikawa</span>
+    <nav aria-label="Footer"><a href="privacy.html">Privacy</a><a href="support.html">Support</a></nav>
+  </div>
+</footer>
 </body>
 </html>
