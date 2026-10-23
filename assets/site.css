@@ -96,7 +96,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .bar-in { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; }
 .mark { display: inline-flex; align-items: center; color: var(--ink); text-decoration: none; min-height: 44px; }
-.mark svg { width: 104px; height: auto; }
+.mark svg { width: 128px; height: auto; }
 .links { display: flex; align-items: center; gap: 4px; list-style: none; margin: 0; padding: 0; }
 .links a {
   display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px;
@@ -425,7 +425,7 @@ body[data-page="home"] .sheet { background: var(--field-dark); color: var(--on-d
 .foot a { color: inherit; }
 .foot-top { display: flex; justify-content: space-between; gap: 24px; align-items: flex-start; }
 .foot-top .notes { font-size: var(--t-small); max-width: 46ch; }
-.foot-top .mark svg { width: 92px; }
+.foot-top .mark svg { width: 116px; }
 .foot-top .mark { color: var(--on-red); margin-bottom: 12px; }
 .mail { display: block; font-weight: 700; letter-spacing: -0.05em; line-height: 0.95; text-decoration: none; font-size: clamp(40px, 8.4vw, 150px); margin-top: 80px; overflow-wrap: anywhere; }
 .mail span { display: inline-block; }
