@@ -171,7 +171,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 /* ---------- Phone screenshots ---------- */
 .phone {
-  position: relative; aspect-ratio: 620 / 1351; border-radius: 13% / 6%;
+  position: relative; aspect-ratio: 620 / 1348; border-radius: 13% / 6%;
   background: #000; overflow: hidden; isolation: isolate;
   border: clamp(4px, 0.55vw, 9px) solid #1f1f22;
 }
@@ -194,7 +194,7 @@ body[data-page="home"] .menu-btn { color: var(--on-dark); }
 body[data-page="home"] .sheet { background: var(--field-dark); color: var(--on-dark); }
 .hero-track { height: 220svh; }
 .hero-stage { position: sticky; top: 64px; height: calc(100svh - 64px); min-height: 600px; overflow: hidden; }
-.hero-in { --pw: clamp(220px, min(24vw, calc((100svh - 190px) * 0.459)), 400px); position: relative; height: 100%; display: grid; grid-template-columns: 1fr; grid-template-rows: 1fr; align-items: center; }
+.hero-in { --pw: clamp(220px, min(24vw, calc((100svh - 190px) * 0.46)), 400px); position: relative; height: 100%; display: grid; grid-template-columns: 1fr; grid-template-rows: 1fr; align-items: center; }
 .hero h1 { grid-area: 1 / 1; display: grid; grid-template-columns: 1fr var(--pw) 1fr; column-gap: clamp(20px, 3vw, 48px); align-items: center; padding-bottom: 6svh; position: relative; z-index: 1; pointer-events: none; }
 .hero .half { font-size: clamp(40px, 4.6vw, 88px); line-height: 0.96; letter-spacing: -0.045em; font-weight: 700; }
 .hero .half.a { grid-column: 1; justify-self: start; }
@@ -202,6 +202,7 @@ body[data-page="home"] .sheet { background: var(--field-dark); color: var(--on-d
 .hero-phone { grid-area: 1 / 1; justify-self: center; width: var(--pw); margin-bottom: 6svh; pointer-events: none; }
 .hero .reel img { opacity: 0; transition: opacity 0.45s ease; }
 .hero .reel img.on { opacity: 1; }
+.hero-spacer { display: none; }
 .hero-foot { position: absolute; left: var(--margin); right: var(--margin); bottom: clamp(20px, 4svh, 40px); display: grid; grid-template-columns: 1fr 1fr; align-items: end; gap: 24px; }
 .hero-foot .intro { max-width: 34ch; font-size: var(--t-body); }
 .hero-foot .intro strong { font-weight: 600; }
@@ -220,7 +221,8 @@ body[data-page="home"] .sheet { background: var(--field-dark); color: var(--on-d
   .hero h1 { display: block; padding-bottom: 0; }
   .hero .half { display: block; font-size: clamp(44px, 13vw, 76px); }
   .hero .half.b { text-align: right; }
-  .hero-phone { width: min(72vw, 330px); align-self: center; margin: 28px 0 0; }
+  .hero-phone { --mw: min(72vw, 330px, calc((100svh - 104px) * 0.46)); width: var(--mw); align-self: center; margin: 28px 0 0; position: sticky; top: calc(64px + (100svh - 64px - var(--mw) / 0.46) / 2); z-index: 1; }
+  .hero-spacer { display: block; order: 3; height: 150svh; }
   .hero h1 .half.b { margin-top: 0; }
   .hero-foot { position: static; grid-template-columns: 1fr; margin-top: 28px; }
   .hero-cap { display: none; }
@@ -307,8 +309,11 @@ body[data-page="home"] .sheet { background: var(--field-dark); color: var(--on-d
 
 /* posters: a fanned stack */
 .fan { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(12px, 2vw, 28px); align-items: end; }
-.fan .phone:nth-child(1) { transform: translateY(8%); }
-.fan .phone:nth-child(3) { transform: translateY(14%); }
+.fan > :nth-child(1) { transform: translateY(8%); }
+.fan > :nth-child(3) { transform: translateY(14%); }
+.poster { position: relative; aspect-ratio: 9 / 16; border-radius: 14px; overflow: hidden; background: #000; border: 1px solid #26262a; }
+.poster img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.gallery .poster { align-self: start; }
 .fan figcaption { grid-column: 1 / -1; }
 .posters .say { grid-column: 8 / span 5; grid-row: 1; }
 .posters .show { grid-column: 1 / span 6; grid-row: 1; }
@@ -574,8 +579,8 @@ body[data-page="home"] .sheet { background: var(--field-dark); color: var(--on-d
 .js [data-rise].in { opacity: 1; transform: none; }
 .js .phone[data-rise] { transform: translateY(40px); }
 .js .phone[data-rise].in { transform: none; }
-.js .fan .phone[data-rise].in:nth-child(1) { transform: translateY(8%); }
-.js .fan .phone[data-rise].in:nth-child(3) { transform: translateY(14%); }
+.js .fan > [data-rise].in:nth-child(1) { transform: translateY(8%); }
+.js .fan > [data-rise].in:nth-child(3) { transform: translateY(14%); }
 }
 
 @media (prefers-reduced-motion: reduce) {

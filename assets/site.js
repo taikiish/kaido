@@ -69,26 +69,25 @@
       if (stepEl) stepEl.textContent = (i + 1) + " of " + shots.length;
     };
     var wide = window.matchMedia("(min-width: 861px)");
+    var phoneBox = track.querySelector(".hero-phone");
+    var spacer = track.querySelector(".hero-spacer");
     var tick = function () {
-      if (!wide.matches) { show(0); return; }
-      var r = track.getBoundingClientRect();
-      var span = track.offsetHeight - window.innerHeight;
-      var p = Math.min(1, Math.max(0, -r.top / Math.max(1, span)));
+      var p;
+      if (wide.matches) {
+        var r = track.getBoundingClientRect();
+        var span = track.offsetHeight - window.innerHeight;
+        p = -r.top / Math.max(1, span);
+      } else if (phoneBox && spacer) {
+        // phones: the phone sticks while the spacer scrolls under it
+        p = (phoneBox.getBoundingClientRect().bottom - spacer.getBoundingClientRect().top) / Math.max(1, spacer.offsetHeight);
+      } else { p = 0; }
+      p = Math.min(1, Math.max(0, p));
       show(Math.min(shots.length - 1, Math.floor(p * shots.length * 0.999)));
     };
     var raf = 0;
     window.addEventListener("scroll", function () { if (!raf) raf = requestAnimationFrame(function () { raf = 0; tick(); }); }, { passive: true });
     window.addEventListener("resize", tick);
     tick();
-    // on phones the reel turns by itself, slowly, while it is on screen
-    var auto = null;
-    var phoneEl = track.querySelector(".hero-phone");
-    if (phoneEl && "IntersectionObserver" in window && !reduce) {
-      new IntersectionObserver(function (en) {
-        clearInterval(auto);
-        if (en[0].isIntersecting && !wide.matches) auto = setInterval(function () { show((current + 1) % shots.length); }, 2600);
-      }, { threshold: 0.5 }).observe(phoneEl);
-    }
   }
 
   /* ---------- Sentences with switches ---------- */
