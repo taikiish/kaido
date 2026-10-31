@@ -110,7 +110,8 @@
 
   function initDemo(card) {
     var base = card.getAttribute("data-base") || "assets/data/";
-    var colors = { "GT3": "#4c8df6", "Type R": "#43d17a", "Miata": "#f2a93b", "Scooter": "#3cc8e0", "Z": "#e8d94a", "A110": "#ef6fa8" };
+    var colors = { "GT3": "#c8642b", "Type R": "#2f5d8a", "Miata": "#4e8a5a", "Scooter": "#1a1918", "Z": "#2f5d8a", "A110": "#4e8a5a" };
+    var MI = 0.621371; // the sample is stored in km; the site speaks miles
     var views = {
       la: { label: "Los Angeles", region: "california", box: [-118.95, 33.62, -117.55, 34.45] },
       california: { label: "California", region: "california", box: null },
@@ -199,7 +200,7 @@
         var el = document.createElementNS("http://www.w3.org/2000/svg", "path");
         el.setAttribute("class", "route");
         el.setAttribute("d", pathD(r.p, P.f));
-        el.setAttribute("stroke", colors[r.c] || "#f2efea");
+        el.setAttribute("stroke", colors[r.c] || "#1a1918");
         el.__r = r;
         gRoutes.appendChild(el);
         paths.push(el);
@@ -215,7 +216,7 @@
       card.classList.remove("focus");
       hot = null;
       if (animate && !reduce) inkIn(paths);
-      countTo(total, animate && !reduce ? 1500 : 0);
+      countTo(total * MI, animate && !reduce ? 1500 : 0);
       if (input && input.value) find(input.value, false, true);
     }
 
@@ -291,16 +292,16 @@
       if (hot) hot.classList.remove("hot");
       hot = null;
       card.classList.remove("focus");
-      if (result) result.innerHTML = '<p class="muted">Type a road, a town or a place from the demo: Big Sur, Hakone, Versailles, Mulholland.</p>';
+      if (result) result.innerHTML = '<p class="muted">Type a road, a town or a place: Big Sur, Hakone, Versailles, Mulholland.</p>';
     }
 
     function showResult(r, q) {
       if (!result) return;
-      if (!r) { result.innerHTML = '<p class="muted">No drive called "' + escapeHTML(q) + '" in the demo garage. Try Big Sur, Hakone or Versailles.</p>'; return; }
+      if (!r) { result.innerHTML = '<p class="muted">No drive called "' + escapeHTML(q) + '" in the sample logbook. Try Big Sur, Hakone or Versailles.</p>'; return; }
       var place = { california: "California", france: "France", japan: "Japan" }[r.r];
       result.innerHTML =
         '<p class="r-name">' + escapeHTML(r.n) + "</p>" +
-        '<p class="r-km">' + r.km.toLocaleString("en-US", { maximumFractionDigits: 1 }) + "<small>km</small></p>" +
+        '<p class="r-km">' + (r.km * MI).toLocaleString("en-US", { maximumFractionDigits: 1 }) + "<small>mi</small></p>" +
         '<p class="r-meta"><i class="pill-dot" style="background:' + colors[r.c] + '"></i>' + r.c + " · " + place + "</p>";
     }
 
