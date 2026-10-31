@@ -110,7 +110,7 @@
 
   function initDemo(card) {
     var base = card.getAttribute("data-base") || "assets/data/";
-    var colors = { "GT3": "#c8642b", "Type R": "#2f5d8a", "Miata": "#4e8a5a", "Scooter": "#1a1918", "Z": "#2f5d8a", "A110": "#4e8a5a" };
+    var colors = { "GT3": "#c4501a", "Type R": "#1f4f8f", "Miata": "#2f7a42", "Scooter": "#1a1918", "Z": "#1f4f8f", "A110": "#2f7a42" };
     var MI = 0.621371; // the sample is stored in km; the site speaks miles
     var views = {
       la: { label: "Los Angeles", region: "california", box: [-118.95, 33.62, -117.55, 34.45] },
