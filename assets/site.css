@@ -634,9 +634,9 @@ figure { margin: 0; }
 .k-demo .result .r-meta, .k-demo .legend, .k-demo .odo-sub { color: var(--muted); }
 .k-demo .map-card { background: #e4e0d6; border-radius: 0; }
 .k-demo .map-card .land { fill: var(--paper); stroke: none; }
-.k-demo .map-card .route { stroke-width: 2.8; opacity: 1; }
-.k-demo .map-card.focus .route { opacity: 0.4; }
-.k-demo .map-card .route.hot { opacity: 1; stroke-width: 4.6; }
+.k-demo .map-card .route { stroke-width: 3.6; opacity: 1; }
+.k-demo .map-card.focus .route { opacity: 0.55; }
+.k-demo .map-card .route.hot { opacity: 1; stroke-width: 6; }
 .k-demo .odo { font-family: var(--serif); font-weight: 400; color: var(--ink); }
 
 /* how: a short list beside the gloves */
