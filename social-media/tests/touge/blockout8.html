@@ -97,7 +97,8 @@ const RIGS = { dive: { p: [0.03, 0.02, 0.014], y: [0.6, 0.25, 0.12], x: [0.5, 0.
 RIGS.track = RIGS.away = RIGS.chase; RIGS.low = RIGS.flyby = RIGS.side;
 window.renderAt = T0 => { for (let i = 0; i < MB; i++) { sub(T0 + (MB > 1 ? (i / MB) * 0.5 / 30 : 0)); actx.globalAlpha = 1 / (i + 1); actx.drawImage(r.domElement, 0, 0); } };
 const sub = t => {
-  let sh = 0; while (sh < SH.length - 1 && t >= SH[sh + 1].t0) sh++; const S = SH[sh], u = Math.min(1, (t - S.t0) / S.d), s = S.s0 + VS * S.v * S.d * (S.r ? RAMP[S.r](u) : u), c = carAt(s), k = S.k;
+  const SOLO = Q.get('solo'); if (SOLO !== null) t += SH[+SOLO].t0;
+  let sh = 0; while (sh < SH.length - 1 && t >= SH[sh + 1].t0) sh++; if (SOLO !== null) sh = +SOLO; const S = SH[sh], u = SOLO !== null ? (t - S.t0) / S.d : Math.min(1, (t - S.t0) / S.d), s = S.s0 + VS * S.v * S.d * (S.r ? RAMP[S.r](u) : u), c = carAt(s), k = S.k;
   const pitch = Math.atan2(at(s + 2).y - at(s - 2).y, 4);
   car.position.set(c.x, c.y + 0.07, c.z); car.rotation.set(0, Math.atan2(c.hx, c.hz), 0); car.rotateX(-pitch); car.wheels.forEach(w => w.rotation.x = s / 0.35);
   const h = head(s, 5), rx = -h.dz, rz = h.dx, P = (back, right, up) => new THREE.Vector3(c.x - h.dx * back + rx * right, c.y + up, c.z - h.dz * back + rz * right);
