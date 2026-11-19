@@ -1,0 +1,181 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}</script></head><body>
+<script type="module">
+// Kaido walk-in block-out. Same contract as touge-v3/blockout9.html: window.renderAt(t), window.ready = true.
+// Car at the origin, nose toward +z, parked and never moved. The only motion is walkCam. No plates, lamps dark, no signs, no figures.
+// ?T=4 clip seconds  ?spd=4 edit speed-up the shake is timed for  ?shot=1..6  ?w=720&h=1280  ?mb=8 (sub-frame samples)   test overrides: ?d1=  ?fov=  ?gain= (scales yaw + pitch shake)
+import * as THREE from 'three';
+import { build964, NEAR964 } from './car964.js';
+import { buildSpec } from './cars.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+const Q = new URLSearchParams(location.search), W = +(Q.get('w') || 720), H = +(Q.get('h') || 1280), MB = +(Q.get('mb') || 8), SHOT = +(Q.get('shot') || 1);
+const r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true }); r.setSize(W, H); r.setPixelRatio(1); r.outputColorSpace = THREE.SRGBColorSpace;
+const acc = document.createElement('canvas'); acc.width = W; acc.height = H; const actx = acc.getContext('2d'); document.body.appendChild(acc); document.body.appendChild(r.domElement); r.domElement.style.display = 'none';
+const SKY = 0xc3c7c4, sc = new THREE.Scene(); sc.background = new THREE.Color(SKY); sc.fog = new THREE.Fog(SKY, 35, 260);
+const cam = new THREE.PerspectiveCamera(40, W / H, 0.05, 2000);
+sc.add(new THREE.HemisphereLight(0xe6eae8, 0x6b6e68, 2.6));          // flat overcast: hemisphere only, no sun, no cast shadows
+const flat = c => new THREE.MeshLambertMaterial({ color: c, flatShading: true });
+const box = (w, h, d, x, y, z, m) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); sc.add(o); return o; };
+const hh = i => { const v = Math.sin(i * 127.1 + 31.7) * 43758.5453; return v - Math.floor(v); };
+
+// ---- shots: car, side facing the camera, degrees off the car's centre line (max 15), location ----
+// per shot: d0 = start distance from the bodywork, d1 = end distance, eye = camera height, fe = fisheye lens, degrees corner to corner. All still a straight level walk.
+const SHOTS = { 1: { car: '964', side: 'REAR', off: 12, place: 'rail', d0: 4.15, d1: 1.3, eye: 1.35, fe: 125 }, 2: { car: 'supra', side: 'FRONT', off: 0, place: 'river', d0: 2.35, d1: 0.7, eye: 0.6, fe: 135 }, 3: { car: 'f40', side: 'REAR', off: 7, place: 'express', d0: 3.17, d1: 0.85, eye: 1.0, fe: 135 },
+  4: { car: 'r34', side: 'FRONT', off: 13, place: 'street', d0: 1.80, d1: 0.6, eye: 0.9, fe: 130 }, 5: { car: 'ae86', side: 'REAR', off: 5, place: 'field', d0: 6.10, d1: 2.2, eye: 1.5, fe: 120 }, 6: { car: 'diablo', side: 'FRONT', off: 10, place: 'harbour', d0: 2.90, d1: 0.8, eye: 0.45, fe: 135 } };
+const S = SHOTS[SHOT]; window.SHOT = { n: SHOT, ...S };
+
+// ---- car ----
+async function loadSupra() {   // Mac ~/Supra_Reel/model glb: nose already +z, metres. Emblem mesh hidden, every lamp unlit, flat materials.
+  const g = await new GLTFLoader().loadAsync('./supra.glb'), car = g.scene, HIDE = Q.get('hide') ? Q.get('hide').split(',') : ['EMBLEM'];
+  car.traverse(o => { if (!o.isMesh) return; const m = o.material, n = m.name; if (HIDE.some(h => n.includes(h))) { o.visible = false; return; }
+    const lamp = /LIGHT|TURNSIGNAL/.test(n) && !/GLASS|CHROME|PLASTIC/.test(n);
+    o.material = new THREE.MeshLambertMaterial({ color: n.includes('CAR_PAINT') ? new THREE.Color(0xa9aba8) : m.color.clone(), map: m.map, transparent: m.transparent, opacity: m.opacity, alphaTest: m.alphaTest, side: m.side });
+    if (lamp) o.material.color.multiplyScalar(0.3); if (n.includes('CHROME')) o.material.color.set(0x5c6062); if (n.includes('WINDOWS')) { o.material.color.set(0x394244); o.material.map = null; o.material.opacity = 0.9; } });
+  car.NEAR = { FRONT: 2.24, REAR: 2.28 }; return car; }
+const car = S.car === '964' ? build964({ stock: true, colour: [44, 78, 60] }) : S.car === 'supra' ? await loadSupra() : buildSpec(S.car); sc.add(car);
+const NEARS = S.car === '964' ? NEAR964 : car.NEAR;
+{ // soft contact shade under the body (overcast, no hard sun shadow)
+  const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'), g = x.createRadialGradient(64, 64, 8, 64, 64, 64); g.addColorStop(0, 'rgba(0,0,0,0.62)'); g.addColorStop(0.7, 'rgba(0,0,0,0.3)'); g.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 5.4), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false })); m.rotation.x = -Math.PI / 2; m.position.y = 0.012; sc.add(m); }
+
+// ---- locations. Road runs along z in every one. Car's left (+x) is the near side, the camera comes up the road side (-x) ----
+const ASPH = flat(0x5d605f), ASPH2 = flat(0x676a68), CONC = flat(0x9a9c96), CONC2 = flat(0x8a8c86), CONC3 = flat(0x7c7e79), GRASS = flat(0x5f7050), GRASS2 = flat(0x6e7c58), POLE = flat(0x76766e), STEEL = flat(0x6f7474), WIRE = flat(0x2c2e2e), WHITE = flat(0xc9cbc6), RUST = flat(0x7a5a48), WATER = flat(0x66716c);
+const cyl = (r0, r1, h, x, y, z, m, n = 10) => { const o = new THREE.Mesh(new THREE.CylinderGeometry(r0, r1, h, n), m); o.position.set(x, y, z); sc.add(o); return o; };
+const patches = (x0, x1, n = 26) => { for (let i = 0; i < n; i++) box(1.2 + hh(i) * 2.2, 0.012, 3 + hh(i + 9) * 9, x0 + hh(i + 3) * (x1 - x0), 0.004, -150 + i * 11.5 + hh(i + 5) * 6, ASPH2); };
+const poles = (x, step, off, arm = 1.9) => { for (let i = -8; i < 9; i++) { const z = i * step + off; cyl(0.14, 0.17, 9.5, x, 4.75, z, POLE); box(arm, 0.1, 0.1, x, 8.6, z, POLE); box(arm * 0.7, 0.1, 0.1, x, 7.7, z, POLE); cyl(0.24, 0.24, 0.6, x + 0.4, 7.2, z, STEEL); }
+  for (const [dx, y] of [[-arm * 0.45, 8.66], [0, 8.66], [arm * 0.45, 8.66], [-arm * 0.3, 7.76], [arm * 0.3, 7.76]]) box(0.025, 0.025, 600, x + dx, y, 0, WIRE); };
+const houses = (x0, dir, n = 40, seed = 0) => { for (let i = 0; i < n; i++) { const k = i + seed, z = -290 + i * (580 / n) + hh(k) * 5, w = 5 + hh(k + 20) * 4, h = 5 + hh(k + 40) * 3.5, d = 7 + hh(k + 60) * 4, x = x0 + dir * (w / 2 + hh(k + 2) * 1.5);
+  box(w, h, d, x, h / 2, z, flat([0xb1aea4, 0xa7a9a6, 0x9c9a90, 0xb8b4a8][k % 4])); box(w + 0.6, 0.5, d + 1, x, h + 0.25, z, flat([0x5a5e63, 0x6a5a52, 0x55595a][k % 3]));
+  box(0.08, 1.1, 1.6, x - dir * (w / 2 + 0.03), h * 0.72, z + 1, flat(0x4d5557)); box(0.08, 1.1, 1.6, x - dir * (w / 2 + 0.03), h * 0.3, z - 1.2, flat(0x4d5557)); box(0.5, 0.6, 0.8, x - dir * (w / 2 + 0.3), 0.3, z + 2.5, WHITE); } };
+const slope = (w, len, x, y, z, rot, m) => { const o = box(w, 0.2, len, x, y, z, m); o.rotation.z = rot; return o; };
+if (S.place === 'rail') {
+  const BAL = flat(0x77716a);
+  box(8, 0.1, 600, -2.55, -0.05, 0, ASPH);                                              // road, x -6.55 .. 1.45
+  for (let i = 0; i < 26; i++) box(1.2 + hh(i) * 2.2, 0.012, 3 + hh(i + 9) * 9, -5.2 + hh(i + 3) * 5.6, 0.004, -150 + i * 11.5 + hh(i + 5) * 6, ASPH2);   // patch repairs
+  box(0.2, 0.16, 600, 1.15, 0.08, 0, CONC);                                             // kerb at the car's left wheels
+  box(1.5, 0.14, 600, 2.0, 0.07, 0, CONC2);                                             // footpath
+  for (let z = -300; z < 300; z += 3) box(1.5, 0.004, 0.03, 2.0, 0.142, z, CONC);       // paving joints
+  for (let z = -300; z < 300; z += 4) { box(0.22, 1.7, 3.94, 2.86, 0.85, z + 2, z % 8 ? CONC : CONC2); box(0.26, 0.08, 3.94, 2.86, 1.74, z + 2, CONC2); }   // block wall
+  for (let i = -8; i < 9; i++) { const z = i * 30 + 12; const p = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.17, 9.5, 10), POLE); p.position.set(1.55, 4.75, z); sc.add(p);
+    box(1.9, 0.1, 0.1, 1.55, 8.6, z, POLE); box(1.3, 0.1, 0.1, 1.55, 7.7, z, POLE); const tr = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.6, 10), STEEL); tr.position.set(1.95, 7.2, z); sc.add(tr); }
+  for (const [x, y] of [[0.7, 8.66], [1.55, 8.66], [2.4, 8.66], [1.0, 7.76], [2.1, 7.76]]) box(0.025, 0.025, 600, x, y, 0, flat(0x2c2e2e));      // wires
+  for (let i = 0; i < 40; i++) { const z = -290 + i * 15 + hh(i) * 6, w = 5 + hh(i + 20) * 4, h = 5 + hh(i + 40) * 3.5; box(w, h, 7 + hh(i + 60) * 5, 3.3 + w / 2 + hh(i + 2) * 2, h / 2, z, flat([0xb1aea4, 0xa7a9a6, 0x9c9a90, 0xb8b4a8][i % 4]));
+    box(w + 0.6, 0.5, 8 + hh(i + 60) * 5, 3.3 + w / 2 + hh(i + 2) * 2, h + 0.25, z, flat([0x5a5e63, 0x6a5a52, 0x55595a][i % 3])); }                  // houses behind the wall
+  box(0.2, 0.16, 600, -6.65, 0.08, 0, CONC);                                            // far kerb
+  box(2.2, 0.1, 600, -7.85, 0.0, 0, GRASS);                                             // verge
+  for (let i = 0; i < 160; i++) { const g = new THREE.Mesh(new THREE.ConeGeometry(0.22 + hh(i) * 0.3, 0.5 + hh(i + 7) * 0.9, 5), i % 2 ? GRASS : GRASS2); g.position.set(-7 - hh(i + 11) * 1.7, 0.3, -280 + i * 3.5 + hh(i + 3) * 2); sc.add(g); }
+  for (let z = -300; z < 300; z += 2.5) box(0.07, 1.3, 0.07, -9.0, 0.65, z, STEEL);     // rail fence posts
+  for (const y of [0.45, 0.85, 1.25]) box(0.04, 0.04, 600, -9.0, y, 0, STEEL);
+  box(9, 0.5, 600, -14, 0.25, 0, BAL);                                                  // ballast bed
+  for (const x of [-11.6, -12.9, -15.2, -16.5]) box(0.08, 0.14, 600, x, 0.57, 0, flat(0x4a4744));   // rails
+  for (let i = -8; i < 9; i++) { const z = i * 40 - 6; box(0.3, 8, 0.3, -10.2, 4, z, STEEL); box(0.3, 8, 0.3, -17.9, 4, z, STEEL); box(8, 0.3, 0.3, -14.05, 7.6, z, STEEL); box(8, 0.12, 0.12, -14.05, 6.8, z, STEEL); }
+  for (const x of [-12.25, -15.85]) { box(0.03, 0.03, 600, x, 6.1, 0, flat(0x2c2e2e)); box(0.03, 0.03, 600, x, 6.75, 0, flat(0x2c2e2e)); }
+  box(60, 0.1, 600, -48, 0.0, 0, GRASS2);                                               // fields beyond the tracks
+  box(400, 0.1, 600, 150, -0.06, 0, flat(0x7b7d78));
+}
+
+
+if (S.place === 'river') {   // road along the top of a river embankment: guard rail on the car's left, river below it, houses below on the other side
+  box(5.6, 0.1, 600, -1.5, -0.05, 0, ASPH); patches(-3.8, 0.6);
+  box(0.5, 0.06, 600, 1.55, -0.02, 0, GRASS2); box(0.5, 0.06, 600, -4.55, -0.02, 0, GRASS2);
+  for (let z = -300; z < 300; z += 2) { box(0.1, 0.75, 0.1, 1.6, 0.37, z, WHITE); if (Math.round(z / 2) % 15 === 7) box(0.11, 0.2, 0.11, 1.6, 0.3, z, RUST); }
+  box(0.05, 0.3, 600, 1.54, 0.58, 0, WHITE);                                             // guard rail beam
+  slope(9, 600, 6.1, -2.0, 0, -0.47, GRASS); box(3, 0.1, 600, 11.5, -4.05, 0, CONC2);     // bank down to a concrete path
+  for (let i = 0; i < 120; i++) cyl(0, 0.2 + hh(i) * 0.25, 0.6 + hh(i + 4), 2.6 + hh(i + 8) * 7, -0.2 - hh(i + 8) * 3.4, -280 + i * 4.7, i % 2 ? GRASS2 : GRASS, 5);
+  box(60, 0.1, 600, 43, -4.6, 0, WATER);                                                  // river
+  for (let i = 0; i < 60; i++) cyl(0, 2.5 + hh(i) * 2.5, 6 + hh(i + 5) * 6, 84 + hh(i + 9) * 6, 3.5, -290 + i * 9.8, flat(i % 3 ? 0x4c5a46 : 0x55634c), 7);
+  slope(10, 600, 77, -2.3, 0, 0.47, GRASS2); box(40, 0.1, 600, 101, 0, 0, GRASS); houses(86, 1, 30, 7);
+  for (const z of [-140, 190]) { box(64, 1.4, 5, 43, 0.3, z, STEEL); for (const x of [22, 43, 64]) box(2.2, 5, 4, x, -2.3, z, CONC2); box(64, 0.1, 0.1, 43, 1.9, z - 2.4, STEEL); box(64, 0.1, 0.1, 43, 1.9, z + 2.4, STEEL); }   // road bridges far up and down river
+  slope(7, 600, -8.0, -1.6, 0, 0.47, GRASS); box(80, 0.1, 600, -51, -3.2, 0, flat(0x777a74)); houses(-12.5, -1, 44, 3); houses(-30, -1, 30, 13);
+  for (let i = -8; i < 9; i++) cyl(0.12, 0.15, 11, -11.6, 2.3, i * 34 + 9, POLE); box(0.025, 0.025, 600, -11.6, 7.6, 0, WIRE);
+}
+if (S.place === 'express') {   // surface street beside an elevated expressway: big pillars and a mesh fence on the car's left
+  box(9, 0.1, 600, -3.05, -0.05, 0, ASPH); patches(-6.5, 0.8);
+  box(0.2, 0.16, 600, 1.15, 0.08, 0, CONC); box(1.3, 0.14, 600, 1.9, 0.07, 0, CONC2);
+  for (let z = -300; z < 300; z += 2.5) box(0.05, 1.8, 0.05, 2.6, 0.9, z, STEEL);
+  for (const y of [0.2, 1.75]) box(0.04, 0.04, 600, 2.6, y, 0, STEEL);
+  { const m = new THREE.MeshLambertMaterial({ color: 0x7d8381, transparent: true, opacity: 0.32, side: THREE.DoubleSide }); const o = new THREE.Mesh(new THREE.PlaneGeometry(600, 1.55), m); o.rotation.y = Math.PI / 2; o.position.set(2.6, 0.97, 0); sc.add(o); }
+  box(18, 0.08, 600, 11.7, 0.0, 0, flat(0x4f504d));                                       // dark gravel lot under the deck
+  box(17, 2.2, 600, 11.5, 10.6, 0, flat(0x6c6e6a)); box(0.4, 1.3, 600, 2.9, 12.3, 0, flat(0x8b8d88)); box(0.4, 1.3, 600, 20.1, 12.3, 0, flat(0x8b8d88)); box(17, 0.3, 600, 11.5, 9.4, 0, flat(0x3d3f3d));
+  for (let i = -10; i < 11; i++) { const z = i * 28 + 10; box(2.2, 8, 2.6, 5.2, 4, z, flat(0x85877f)); box(2.2, 8, 2.6, 17.8, 4, z, flat(0x7b7d76)); box(16.5, 1.6, 2.8, 11.5, 8.6, z, flat(0x74766f)); box(2.24, 0.5, 2.64, 5.2, 0.9, z, flat(0x9a8f45)); }
+  for (let i = 0; i < 14; i++) box(1.1, 0.9 + hh(i) * 0.5, 1.1, 8 + hh(i + 3) * 8, 0.5, -200 + i * 31 + hh(i + 6) * 9, i % 3 ? flat(0x4c5e6a) : RUST);   // drums and bins in the lot
+  box(0.2, 0.16, 600, -7.65, 0.08, 0, CONC); box(2, 0.14, 600, -8.75, 0.07, 0, CONC2);
+  for (let i = 0; i < 36; i++) { const z = -290 + i * 16.3, w = 8 + hh(i + 1) * 5, h = 7 + hh(i + 31) * 14, d = 11 + hh(i + 9) * 4; box(w, h, d, -9.9 - w / 2, h / 2, z, flat([0xa5a49c, 0x979a98, 0xaeaaa0, 0x8f918c][i % 4]));
+    for (let f = 1; f * 3.2 < h - 1; f++) box(0.06, 1.2, d - 2, -9.87, f * 3.2 + 0.4, z, flat(0x4d5557)); box(0.1, 2.4, d - 3, -9.86, 1.2, z, flat(0x5b5d5b)); }
+  poles(-8.6, 32, 4, 1.6);
+}
+if (S.place === 'street') {   // narrow residential back street: block walls close on both sides, poles, wires, houses
+  box(5.4, 0.1, 600, -1.4, -0.05, 0, ASPH); patches(-3.6, 0.8);
+  for (const x of [1.18, -3.98]) { box(0.36, 0.06, 600, x, 0.0, 0, CONC3); for (let z = -300; z < 300; z += 0.6) box(0.3, 0.012, 0.02, x, 0.034, z, flat(0x4b4d4b)); }   // gutter covers
+  for (let z = -300; z < 300; z += 4) { const a = Math.round(z / 4);
+    if (a % 6 !== 2) { box(0.2, 1.6, 3.94, 1.5, 0.8, z + 2, a % 2 ? CONC : CONC2); box(0.24, 0.07, 3.94, 1.5, 1.63, z + 2, CONC3); }
+    if (a % 5 !== 1) { box(0.2, 1.3, 3.94, -4.3, 0.65, z + 2, a % 2 ? CONC2 : flat(0xa39f93)); for (let k = 0; k < 4 && a % 3 === 0; k++) cyl(0, 0.5, 1.1, -4.9, 1.6 + hh(a + k) * 0.5, z + 0.6 + k, GRASS, 6); } }
+  houses(1.75, 1, 52, 21); houses(-4.6, -1, 52, 5); houses(13, 1, 30, 40); houses(-17, -1, 30, 50);
+  poles(1.25, 30, 14, 1.5); for (let i = -8; i < 9; i++) cyl(0.12, 0.15, 8, -4.05, 4, i * 30 - 2, POLE);
+  for (let i = -8; i < 9; i++) { const o = box(0.02, 0.02, 5.6, -1.4, 7.4, i * 30 + 6, WIRE); o.rotation.y = Math.PI / 2 - 0.5; }       // service drops across the street
+  for (let i = 0; i < 30; i++) { const z = -288 + i * 19.7, sd = i % 2 ? 1 : -1, x = sd > 0 ? 1.28 : -4.02; if (Math.abs(z) < 7) continue; box(0.34, 0.3, 0.34, x, 0.15, z, RUST); cyl(0, 0.24, 0.5, x, 0.55, z, GRASS2, 6); }   // planters
+  box(400, 0.1, 600, 0, -0.07, 0, flat(0x7b7d78));
+}
+if (S.place === 'field') {   // single lane between rice fields: no kerb, grass edges, a water channel, far tree line and hills
+  box(4.2, 0.1, 600, -0.75, -0.05, 0, ASPH); patches(-2.4, 0.9, 18);
+  box(1.3, 0.1, 600, 2.0, -0.07, 0, GRASS); box(1.3, 0.1, 600, -3.5, -0.07, 0, GRASS2);
+  for (let i = 0; i < 260; i++) { const sd = i % 2 ? 1 : -1; cyl(0, 0.16 + hh(i) * 0.2, 0.35 + hh(i + 7) * 0.5, sd > 0 ? 1.55 + hh(i + 11) * 1.4 : -3.0 - hh(i + 11) * 1.1, 0.15, -285 + i * 2.2 + hh(i + 3), i % 3 ? GRASS : GRASS2, 5); }
+  box(0.14, 0.5, 600, 2.75, -0.2, 0, CONC); box(0.14, 0.5, 600, 3.55, -0.2, 0, CONC); box(0.7, 0.05, 600, 3.15, -0.38, 0, WATER);        // irrigation channel
+  for (let i = -10; i < 10; i++) { const z = i * 30; box(46, 0.1, 28.4, 27, -0.42, z, i % 2 ? flat(0x77794f) : flat(0x6d7350)); box(46, 0.3, 1.4, 27, -0.3, z + 15, GRASS2);
+    box(60, 0.1, 28.4, -34.3, -0.42, z + 11, i % 2 ? flat(0x70754f) : flat(0x7b7a52)); box(60, 0.3, 1.4, -34.3, -0.3, z + 26, GRASS); }
+  for (let i = 0; i < 700; i++) { const sd = i % 2 ? 1 : -1, x = sd > 0 ? 5 + hh(i) * 40 : -5 - hh(i) * 50, z = -150 + hh(i + 50) * 300; box(0.1, 0.16, 0.1, x, -0.3, z, flat(0x9a935f)); }   // stubble
+  for (let i = -6; i < 7; i++) cyl(0.12, 0.15, 8.5, -3.9, 4.25, i * 42 + 15, POLE); for (const y of [7.9, 7.3]) box(0.025, 0.025, 600, -3.9, y, 0, WIRE);
+  for (const [x, z, w] of [[9, -46, 5], [-12, 58, 4], [14, 96, 6], [-9, -105, 4]]) { box(w, 2.6, 4, x, 0.9, z, flat(0x8d8f8a)); const o = box(w + 0.5, 0.15, 4.8, x, 2.35, z, RUST); o.rotation.x = 0.12; }   // tin sheds
+  for (const [x, z] of [[24, 30], [24, -80], [-28, -30]]) { const o = cyl(3, 3, 26, x, -0.4, z, new THREE.MeshLambertMaterial({ color: 0xc4c8c2, transparent: true, opacity: 0.8 }), 14); o.rotation.x = Math.PI / 2; }   // plastic greenhouses
+  for (let i = 0; i < 90; i++) { const sd = i % 2 ? 1 : -1; cyl(0, 3 + hh(i) * 3, 7 + hh(i + 5) * 7, sd * (52 + hh(i + 9) * 16) - (sd < 0 ? 14 : 0), 4, -290 + i * 6.5, flat(i % 3 ? 0x4c5a46 : 0x55634c), 7); }
+  for (let i = 0; i < 24; i++) { const sd = i % 2 ? 1 : -1; cyl(0, 70 + hh(i) * 60, 40 + hh(i + 3) * 45, sd * (170 + hh(i + 6) * 90), 14, -330 + i * 29, flat(0x7d8a7e), 9); }
+  for (const z of [-330, 330]) for (let i = 0; i < 9; i++) cyl(0, 80 + hh(i + 70) * 50, 45 + hh(i + 80) * 40, -200 + i * 50, 14, z, flat(0x86918a), 9);
+  box(900, 0.1, 900, 0, -0.5, 0, flat(0x6f7552));
+}
+if (S.place === 'harbour') {   // fishing harbour quay: sea and bollards on the car's left, sheds, crates and pallets on the other side
+  box(60, 1.0, 600, -27.5, -0.5, 0, flat(0x868882));
+  for (let z = -300; z < 300; z += 6) box(60, 0.012, 0.05, -27.5, 0.004, z, CONC3); for (const x of [-4.5, -12, -20]) box(0.05, 0.012, 600, x, 0.004, 0, CONC3);
+  for (let i = 0; i < 30; i++) box(1.5 + hh(i) * 3, 0.012, 2 + hh(i + 9) * 7, -11 + hh(i + 3) * 11, 0.006, -150 + i * 10 + hh(i + 5) * 6, i % 2 ? flat(0x74766f) : flat(0x8f918a));   // stains and repairs
+  box(0.35, 0.22, 600, 2.3, 0.11, 0, flat(0xa39a56));                                     // quay edge kerb
+  for (let i = -20; i < 21; i++) { const z = i * 14 + 6; cyl(0.2, 0.26, 0.5, 1.75, 0.25, z, flat(0x3c3e3e)); cyl(0.3, 0.2, 0.12, 1.75, 0.55, z, flat(0x3c3e3e)); }
+  box(700, 0.1, 900, 352.5, -1.9, 0, WATER);
+  for (const [z, len, col] of [[-34, 13, 0xc9cbc6], [26, 11, 0xb9c2c6], [-92, 14, 0xc9cbc6], [78, 12, 0xbfc0b6]]) { box(3.4, 1.5, len, 4.6, -1.1, z, flat(col)); box(2.4, 2.2, len * 0.3, 4.6, 0.9, z - len * 0.2, WHITE); box(2.5, 0.5, len * 0.3 + 0.1, 4.6, 1.3, z - len * 0.2, flat(0x39444a)); box(0.08, 3.4, 0.08, 4.6, 3.6, z - len * 0.2, STEEL); box(3.5, 0.2, len, 4.6, -0.3, z, flat(0x4c5e6a)); }   // moored boats
+  box(4, 3.4, 420, 150, -0.2, -40, CONC2); for (let i = 0; i < 70; i++) cyl(0, 1.6, 2.4, 146 + hh(i) * 2, -0.6, -245 + i * 6, CONC3, 5); cyl(1.1, 1.5, 9, 150, 6, 172, WHITE, 12);   // far breakwater, wave blocks, small beacon
+  for (let i = 0; i < 9; i++) { const z = -250 + i * 62, w = 16 + hh(i) * 5, h = 6.5 + hh(i + 4) * 2; box(w, h, 44, -13 - w / 2, h / 2, z, flat([0x8f958f, 0xa09d92, 0x858b8c][i % 3])); const o = box(w + 1, 0.3, 46, -13 - w / 2, h + 0.5, z, flat(0x62686a)); o.rotation.z = 0.06;
+    for (const dz of [-12, 0, 12]) box(0.1, 4.2, 7, -12.96, 2.1, z + dz, flat(0x5a6062)); }
+  for (let i = 0; i < 44; i++) { const z = -220 + i * 10.3 + hh(i) * 4, x = -4.5 - hh(i + 7) * 7, n = 1 + Math.floor(hh(i + 2) * 4); if (Math.abs(z) < 16) continue;
+    for (let k = 0; k < n; k++) box(1.1, 0.32, 0.75, x + hh(i + k) * 0.08, 0.16 + k * 0.33, z, i % 3 ? flat(0x3f6a8c) : flat(0xb7a24a)); if (i % 4 === 0) { box(1.2, 0.14, 1.2, x - 2, 0.07, z + 1, flat(0x9a8566)); box(1.2, 0.14, 1.2, x - 2, 0.22, z + 1.1, flat(0x8f7b5e)); } }
+  for (let i = -6; i < 7; i++) { const z = i * 45 + 20; cyl(0.1, 0.14, 9, -12.4, 4.5, z, STEEL); box(1.6, 0.08, 0.08, -11.7, 8.9, z, STEEL); box(0.5, 0.12, 0.25, -11.0, 8.85, z, flat(0x55595a)); }
+  for (let i = 0; i < 8; i++) { const o = cyl(0.45, 0.45, 0.5, -6 - hh(i) * 6, 0.25, -60 + i * 17, flat(0x33485a), 12); }   // net floats and drums
+  for (let i = 0; i < 16; i++) cyl(0, 60 + hh(i) * 50, 30 + hh(i + 3) * 40, -160 - hh(i + 6) * 90, 14, -330 + i * 44, flat(0x7d8a7e), 9);
+}
+
+// ---- walk-in camera: one function for all shots ----
+const T = +(Q.get('T') || 4), SPD = +(Q.get('spd') || 4), EYE = S.eye, D0 = S.d0, D1 = +(Q.get('d1') || S.d1), RAD = Math.PI / 180, FE = +(Q.get('fe') || S.fe) * RAD / 2, TV = Math.tan(FE) * H / Math.hypot(W, H), FOV = 2 * Math.atan(TV) / RAD, GAIN = +(Q.get('gain') || 1);
+// AX = unit ground vector from the car toward the camera start. NEAR = distance from car centre to nearest bodywork along AX.
+function walkCam(cam, t, AX, NEAR) {
+  const s = (f, p) => Math.sin(2 * Math.PI * f * t / SPD + p);   // the clip is sped up SPD times in the edit (4 s becomes 1 s), so the hand shake is written SPD times slower here and lands at normal speed
+  const d = D0 + (D1 - D0) * Math.min(t / T, 1), PZ = Math.sign(AX.z) * NEAR;   // the walk line passes through the middle of the bumper facing the camera, so the car stays centred at any angle
+  cam.fov = FOV; cam.up.set(0, 1, 0);
+  cam.position.set(AX.x * d, EYE, PZ + AX.z * d);
+  cam.lookAt(0, EYE, PZ);
+  const bob  = 0.022 * s(2, 0) + 0.006 * s(4, 1.3);   // 2 steps a second
+  const sway = 0.018 * s(1, 0.6);
+  cam.position.x += AX.z * sway; cam.position.z -= AX.x * sway; cam.position.y += bob;
+  cam.rotateZ(RAD * (0.35 * s(1, 2.1) + 0.10 * s(3.3, 0.4)));
+  cam.rotateX(RAD * GAIN * (0.20 * s(0.7, 1.0) + 0.12 * s(1.9, 2.6) + 0.05 * s(7.1, 0.2)));
+  cam.rotateY(RAD * GAIN * (0.22 * s(0.9, 4.0) + 0.10 * s(2.3, 0.9) + 0.05 * s(8.3, 3.1)));
+  cam.updateProjectionMatrix();
+}
+const a = S.off * RAD, sgn = S.side === 'REAR' ? -1 : 1;
+const AX = new THREE.Vector3(-Math.sin(a), 0, sgn * Math.cos(a)), NEAR = NEARS[S.side];   // the camera comes up the road side (-x), never the kerb side
+window.DUR = T; window.NFRAMES = Math.round(T * 30);
+// true fisheye (equidistant): the scene is drawn once with a very wide straight lens into a big target, then bent in one pass. Not an ffmpeg effect.
+const SS = +(Q.get('ss') || 2), RT = new THREE.WebGLRenderTarget(W * SS, H * SS, { samples: 4 }), fsc = new THREE.Scene(), fcam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+fsc.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({ uniforms: { t: { value: RT.texture }, wh: { value: new THREE.Vector2(W, H) }, fe: { value: FE }, tv: { value: TV } },
+  vertexShader: 'varying vec2 u; void main(){ u = uv; gl_Position = vec4(position.xy, 0., 1.); }',
+  fragmentShader: 'uniform sampler2D t; uniform vec2 wh; uniform float fe, tv; varying vec2 u; void main(){ vec2 p = (u - .5) * wh / (length(wh) * .5); float rr = max(length(p), 1e-5), k = tan(rr * fe) / rr; vec2 s = vec2(p.x * k / (tv * wh.x / wh.y), p.y * k / tv) * .5 + .5; gl_FragColor = texture2D(t, s); \n#include <colorspace_fragment>\n }' })));
+window.renderAt = t => { for (let k = 0; k < MB; k++) { walkCam(cam, t + (MB > 1 ? (k / MB) * 0.5 / 30 : 0), AX, NEAR); r.setRenderTarget(RT); r.render(sc, cam); r.setRenderTarget(null); r.render(fsc, fcam); actx.globalAlpha = 1 / (k + 1); actx.drawImage(r.domElement, 0, 0); } actx.globalAlpha = 1; };
+window.renderAt(0);
+window.ready = true;
+</script></body></html>
