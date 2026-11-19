@@ -36,7 +36,8 @@ const SHOTS = { 1: { car: '964', side: 'REAR', place: 'rail', az: 150, el: -8, t
   23: { car: 'nsxw', side: 'SIDE', place: 'street', az: 90, el: -2, tgt: [-0.9, 0.5, -0.55], d0: 2.6, d1: 1.05, fe: 140 },
   24: { car: 'mcf', side: 'REAR', place: 'river', az: 118, el: -2, tgt: [-0.9, 0.4, -1.39], d0: 2.4, d1: 0.85, fe: 140 },
   25: { car: 'zon', side: 'REAR', place: 'rail', az: 172, el: -3, tgt: [0, 0.55, -2.1], d0: 2.4, d1: 0.9, fe: 140 },
-  26: { car: 'diablo', side: 'FRONT', place: 'field', az: -40, el: -3, tgt: [0.25, 0.5, 1.95], d0: 2.4, d1: 0.95, fe: 140 } };
+  26: { car: 'diablo', side: 'FRONT', place: 'field', az: -40, el: -3, tgt: [0.25, 0.5, 1.95], d0: 2.4, d1: 0.95, fe: 140 },
+  27: { car: 'count', side: 'REAR', place: 'harbour', az: 152, el: -6, el1: 20, tgt: [-0.35, 0.8, -1.98], d0: 2.0, d1: 0.5, fe: 150 } };
 const S = SHOTS[SHOT]; window.SHOT = { n: SHOT, ...S };
 
 // ---- car ----
@@ -172,7 +173,7 @@ function walkCam(cam, t, AX, NEAR) {
   const s = (f, p) => Math.sin(2 * Math.PI * f * t / SPD + p);   // the clip is sped up SPD times in the edit (4 s becomes 1 s), so the hand shake is written SPD times slower here and lands at normal speed
   const d = D0 + (D1 - D0) * Math.min(t / T, 1);
   cam.fov = FOV; cam.up.set(0, 1, 0);
-  const az = +(Q.get('az') || S.az) * RAD, el = +(Q.get('el') || S.el) * RAD, G = S.tgt;   // straight line toward one point on the car: az = degrees round from the nose toward the road side, el = degrees above level
+  const u_ = Math.min(t / T, 1), az = (+(Q.get('az') || S.az) + ((S.az1 ?? S.az) - S.az) * u_) * RAD, el = (+(Q.get('el') || S.el) + ((S.el1 ?? S.el) - S.el) * u_) * RAD, G = S.tgt;   // straight line toward one point on the car: az = degrees round from the nose toward the road side, el = degrees above level
   const DX = -Math.sin(az) * Math.cos(el), DY = Math.sin(el), DZ = Math.cos(az) * Math.cos(el);
   cam.position.set(G[0] + DX * d, G[1] + DY * d, G[2] + DZ * d);
   cam.lookAt(G[0], G[1], G[2]);
