@@ -70,7 +70,7 @@ export function buildCar(S) {
   const h = { THREE, Wz, lamp, top: z => cr(S.TOP, z), std, rgb, box: (w, hh, d, x, y, z, c) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, hh, d), std(c)); m.position.set(x, y, z); car.add(m); return m; } };
   // wheels: plain tyre, silver dish, five dark spokes
   const tyre = std([18, 18, 20]), rim = new THREE.MeshStandardMaterial({ color: 0xa4a7a9, metalness: 0.2, roughness: 0.5 }), dk = std([40, 41, 42]);
-  for (const [zw, rt, wd] of [[S.ZWF, S.RT, S.wf || 0.22], [S.ZWR, S.RTR || S.RT, S.wr || 0.25]]) for (const s of [-1, 1]) { const g = new THREE.Group(); g.position.set(s * (Wz(zw) - wd / 2 - 0.015), rt, zw);
+  for (const [zw, rt, wd] of [[S.ZWF, S.RT, S.wf || 0.22], [S.ZWR, S.RTR || S.RT, S.wr || 0.25]]) for (const s of [-1, 1]) { const g = new THREE.Group(); g.position.set(s * (Wz(zw) - wd / 2 - (S.wi || 0.015)), rt, zw);
     const t = new THREE.Mesh(new THREE.CylinderGeometry(rt, rt, wd, 40), tyre); t.rotation.z = Math.PI / 2; g.add(t);
     const d = new THREE.Mesh(new THREE.CylinderGeometry(rt * 0.7, rt * 0.7, wd + 0.012, 40), S.rimCol ? std(S.rimCol) : rim); d.rotation.z = Math.PI / 2; g.add(d);
     for (let k = 0; k < 5; k++) { const q = new THREE.Group(); q.rotation.x = k * Math.PI * 2 / 5 + 0.3; const sp = new THREE.Mesh(new THREE.BoxGeometry(0.012, rt * 0.34, rt * 0.34), dk); sp.position.set(s * (wd / 2 + 0.008), rt * 0.42, 0); q.add(sp); g.add(q); }
