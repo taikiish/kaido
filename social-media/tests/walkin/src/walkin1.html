@@ -20,8 +20,12 @@ const hh = i => { const v = Math.sin(i * 127.1 + 31.7) * 43758.5453; return v - 
 
 // ---- shots: car, side facing the camera, degrees off the car's centre line (max 15), location ----
 // per shot: d0 = start distance from the bodywork, d1 = end distance, eye = camera height, fe = fisheye lens, degrees corner to corner. All still a straight level walk.
-const SHOTS = { 1: { car: '964', side: 'REAR', off: 12, place: 'rail', d0: 4.15, d1: 1.3, eye: 1.35, fe: 125 }, 2: { car: 'supra', side: 'FRONT', off: 0, place: 'river', d0: 2.35, d1: 0.7, eye: 0.6, fe: 135 }, 3: { car: 'f40', side: 'REAR', off: 7, place: 'express', d0: 3.17, d1: 0.85, eye: 1.0, fe: 135 },
-  4: { car: 'r34', side: 'FRONT', off: 13, place: 'street', d0: 1.80, d1: 0.6, eye: 0.9, fe: 130 }, 5: { car: 'ae86', side: 'REAR', off: 5, place: 'field', d0: 6.10, d1: 2.2, eye: 1.5, fe: 120 }, 6: { car: 'diablo', side: 'FRONT', off: 10, place: 'harbour', d0: 2.90, d1: 0.8, eye: 0.45, fe: 135 } };
+const SHOTS = { 1: { car: '964', side: 'REAR', place: 'rail', az: 142, el: 4, tgt: [-0.55, 0.75, -1.75], d0: 3.9, d1: 1.6, fe: 125 },
+  2: { car: 'supra', side: 'FRONT', place: 'river', az: 90, el: 0, tgt: [-0.9, 0.55, 0.1], d0: 4.4, d1: 2.0, fe: 135 },
+  3: { car: 'f40', side: 'FRONT', place: 'express', az: 38, el: -3, tgt: [-0.85, 0.42, 1.25], d0: 3.0, d1: 0.85, fe: 135 },
+  4: { car: 'r34', side: 'REAR', place: 'street', az: 158, el: 24, tgt: [-0.1, 0.95, -1.5], d0: 4.5, d1: 2.0, fe: 125 },
+  5: { car: 'ae86', side: 'FRONT', place: 'field', az: 72, el: 5, tgt: [-0.8, 0.7, 0.3], d0: 6.8, d1: 2.8, fe: 115 },
+  6: { car: 'diablo', side: 'FRONT', place: 'harbour', az: 22, el: 28, tgt: [-0.15, 0.7, 1.3], d0: 3.8, d1: 1.6, fe: 130 } };
 const S = SHOTS[SHOT]; window.SHOT = { n: SHOT, ...S };
 
 // ---- car ----
@@ -151,24 +155,25 @@ if (S.place === 'harbour') {   // fishing harbour quay: sea and bollards on the 
 }
 
 // ---- walk-in camera: one function for all shots ----
-const T = +(Q.get('T') || 4), SPD = +(Q.get('spd') || 4), EYE = S.eye, D0 = S.d0, D1 = +(Q.get('d1') || S.d1), RAD = Math.PI / 180, FE = +(Q.get('fe') || S.fe) * RAD / 2, TV = Math.tan(FE) * H / Math.hypot(W, H), FOV = 2 * Math.atan(TV) / RAD, GAIN = +(Q.get('gain') || 1);
+const T = +(Q.get('T') || 4), SPD = +(Q.get('spd') || 4), EYE = S.eye, D0 = +(Q.get('d0') || S.d0), D1 = +(Q.get('d1') || S.d1), RAD = Math.PI / 180, FE = +(Q.get('fe') || S.fe) * RAD / 2, TV = Math.tan(FE) * H / Math.hypot(W, H), FOV = 2 * Math.atan(TV) / RAD, GAIN = +(Q.get('gain') || 1);
 // AX = unit ground vector from the car toward the camera start. NEAR = distance from car centre to nearest bodywork along AX.
 function walkCam(cam, t, AX, NEAR) {
   const s = (f, p) => Math.sin(2 * Math.PI * f * t / SPD + p);   // the clip is sped up SPD times in the edit (4 s becomes 1 s), so the hand shake is written SPD times slower here and lands at normal speed
-  const d = D0 + (D1 - D0) * Math.min(t / T, 1), PZ = Math.sign(AX.z) * NEAR;   // the walk line passes through the middle of the bumper facing the camera, so the car stays centred at any angle
+  const d = D0 + (D1 - D0) * Math.min(t / T, 1);
   cam.fov = FOV; cam.up.set(0, 1, 0);
-  cam.position.set(AX.x * d, EYE, PZ + AX.z * d);
-  cam.lookAt(0, EYE, PZ);
+  const az = +(Q.get('az') || S.az) * RAD, el = +(Q.get('el') || S.el) * RAD, G = S.tgt;   // straight line toward one point on the car: az = degrees round from the nose toward the road side, el = degrees above level
+  const DX = -Math.sin(az) * Math.cos(el), DY = Math.sin(el), DZ = Math.cos(az) * Math.cos(el);
+  cam.position.set(G[0] + DX * d, G[1] + DY * d, G[2] + DZ * d);
+  cam.lookAt(G[0], G[1], G[2]);
   const bob  = 0.022 * s(2, 0) + 0.006 * s(4, 1.3);   // 2 steps a second
   const sway = 0.018 * s(1, 0.6);
-  cam.position.x += AX.z * sway; cam.position.z -= AX.x * sway; cam.position.y += bob;
+  cam.position.x += Math.cos(az) * sway; cam.position.z += Math.sin(az) * sway; cam.position.y += bob;
   cam.rotateZ(RAD * (0.35 * s(1, 2.1) + 0.10 * s(3.3, 0.4)));
   cam.rotateX(RAD * GAIN * (0.20 * s(0.7, 1.0) + 0.12 * s(1.9, 2.6) + 0.05 * s(7.1, 0.2)));
   cam.rotateY(RAD * GAIN * (0.22 * s(0.9, 4.0) + 0.10 * s(2.3, 0.9) + 0.05 * s(8.3, 3.1)));
   cam.updateProjectionMatrix();
 }
-const a = S.off * RAD, sgn = S.side === 'REAR' ? -1 : 1;
-const AX = new THREE.Vector3(-Math.sin(a), 0, sgn * Math.cos(a)), NEAR = NEARS[S.side];   // the camera comes up the road side (-x), never the kerb side
+const AX = null, NEAR = 0;   // the camera comes up the road side (-x), never the kerb side
 window.DUR = T; window.NFRAMES = Math.round(T * 30);
 // true fisheye (equidistant): the scene is drawn once with a very wide straight lens into a big target, then bent in one pass. Not an ffmpeg effect.
 const SS = +(Q.get('ss') || 2), RT = new THREE.WebGLRenderTarget(W * SS, H * SS, { samples: 4 }), fsc = new THREE.Scene(), fcam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
