@@ -115,5 +115,28 @@ const ESP = { ...DIABLO, ZF: 2.17, ZR: -2.17, ZWF: 1.28, ZWR: -1.18, RT: 0.3, RT
   detail: (p, n, ax, S) => { if (p.y < 0.34 && n.y > -0.6) return K.black; if (gapZ(p, n, [0.75, -0.4], 0.34, 0.74)) return K.gap; return null; },
   extras: (car, S, h) => { h.lamp(1, 0.6, 0.38, 0.4, 0.05, K.amber); h.lamp(-1, 0, 0.66, 1.7, 0.13, K.tail); h.box(1.84, 0.05, 0.16, 0, 0.9, -2.12, K.black); } };
 
-export const SPECS = { r34: R34, ae86: AE86, f40: F40, diablo: DIABLO, count: COUNT, testa: TESTA, nsx: NSX, xj: XJ, eb: EB, esp: ESP };
+// ================= v9 (Nov 19): three-seat 90s British hypercar, Italian carbon hypercar, white NSX-type =================
+const MCF = { ...DIABLO, ZF: 2.14, ZR: -2.14, ZWF: 1.33, ZWR: -1.39, RT: 0.31, RTR: 0.33, n: 3.6, col: [168, 172, 176], wf: 0.23, wr: 0.3,
+  TOP: [[2.14, 0.34], [2.1, 0.46], [1.8, 0.56], [1.2, 0.66], [0.95, 0.7], [0, 0.8], [-0.9, 0.88], [-1.8, 0.86], [-2.08, 0.8], [-2.14, 0.62], [-2.14, 0.4]],
+  WID: [[2.14, 0.66], [1.95, 0.84], [1.2, 0.9], [0.2, 0.9], [-0.8, 0.91], [-1.8, 0.91], [-2.14, 0.82]],
+  BOT: [[2.14, 0.24], [1.95, 0.13], [-1.95, 0.15], [-2.14, 0.3]],
+  ROOF: [[0.95, 0.68], [0.5, 0.96], [0.15, 1.12], [-0.35, 1.14], [-0.8, 1.04], [-1.3, 0.92], [-1.6, 0.87]],
+  gh: { hwb: 0.72, hwt: 0.48, n: 3.2 }, ws: [0.9, 0.15], rg: [-0.7, -1.5], bp: -0.3, rgN: 0.1,
+  detail: (p, n, ax, S) => { if (side(n) && p.z < -0.35 && p.z > -0.85 && p.y > 0.34 && p.y < 0.56) return K.grille; if (gapZ(p, n, [0.85, -0.3], 0.2, 0.78)) return K.gap; return null; },
+  extras: (car, S, h) => { h.lamp(1, 0.58, 0.46, 0.4, 0.09, K.lens); h.lamp(1, 0, 0.26, 0.9, 0.08, K.grille); h.lamp(-1, 0, 0.6, 1.6, 0.2, K.grille);
+    h.lamp(-1, 0.48, 0.62, 0.075, 0, K.tail, true); h.lamp(-1, 0.68, 0.62, 0.075, 0, K.tail, true); h.box(0.2, 0.09, 0.8, 0, 1.15, -0.55, S.col); } };
+const ZON = { ...DIABLO, ZF: 2.2, ZR: -2.2, ZWF: 1.3, ZWR: -1.42, n: 4, col: [226, 188, 30], wf: 0.24, wr: 0.34,
+  TOP: [[2.2, 0.3], [2.16, 0.42], [1.9, 0.52], [1.4, 0.62], [1.15, 0.68], [0, 0.8], [-0.9, 0.9], [-1.9, 0.86], [-2.15, 0.8], [-2.2, 0.6], [-2.2, 0.36]],
+  WID: [[2.2, 0.7], [2.0, 0.92], [1.3, 0.98], [0.2, 0.97], [-0.8, 1.02], [-1.9, 1.02], [-2.2, 0.94]],
+  ROOF: [[1.15, 0.66], [0.7, 0.94], [0.3, 1.1], [-0.2, 1.14], [-0.7, 1.06], [-1.3, 0.94], [-1.7, 0.88]],
+  gh: { hwb: 0.74, hwt: 0.5, n: 3 }, ws: [1.0, 0.18], rg: [-0.6, -1.6], bp: -0.2, rgN: 0.1,
+  detail: (p, n, ax, S) => { if (side(n) && p.z < -0.4 && p.z > -0.9 && p.y > 0.42 && p.y < 0.66) return K.grille; if (gapZ(p, n, [1.0, -0.2], 0.2, 0.78)) return K.gap; return null; },
+  extras: (car, S, h) => { h.lamp(1, 0.62, 0.46, 0.3, 0.1, K.lens); h.lamp(1, 0, 0.25, 1.1, 0.09, K.grille); h.lamp(-1, 0, 0.5, 1.75, 0.3, K.grille);
+    for (const x of [0.56, 0.72, 0.86]) h.lamp(-1, x, 0.72, 0.055, 0, K.tail, true);
+    const T = h.THREE, ring = new T.Mesh(new T.CylinderGeometry(0.2, 0.2, 0.06, 28), h.std([22, 22, 24])); ring.rotation.x = Math.PI / 2; ring.position.set(0, 0.5, -2.2); car.add(ring);
+    for (const [x, y] of [[-0.075, 0.575], [0.075, 0.575], [-0.075, 0.425], [0.075, 0.425]]) { const e = new T.Mesh(new T.CylinderGeometry(0.058, 0.058, 0.16, 16), h.std([150, 152, 156])); e.rotation.x = Math.PI / 2; e.position.set(x, y, -2.24); car.add(e); }
+    h.box(1.76, 0.04, 0.3, 0, 1.08, -1.98, S.col); for (const s of [-1, 1]) h.box(0.05, 0.2, 0.26, s * 0.7, 0.98, -1.96, S.col); } };
+const NSXW = { ...NSX, col: [236, 236, 230] };
+
+export const SPECS = { r34: R34, ae86: AE86, f40: F40, diablo: DIABLO, count: COUNT, testa: TESTA, nsx: NSX, xj: XJ, eb: EB, esp: ESP, mcf: MCF, zon: ZON, nsxw: NSXW };
 export const buildSpec = k => buildCar(SPECS[k]);
